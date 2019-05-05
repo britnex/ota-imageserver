@@ -33,11 +33,6 @@ import (
 	"strings"
 )
 
-type FileHeader struct {
-	Hash [sha1.Size]byte
-	Size uint32
-}
-
 var debug bool = false
 
 func copyfile(src string, dst string) error {
