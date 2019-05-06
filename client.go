@@ -280,7 +280,6 @@ func main() {
 				}
 
 				if _, err := io.Copy(trout, fi); err != nil {
-
 					panic(err)
 				}
 				fi.Close()
@@ -309,9 +308,9 @@ func main() {
 
 	// step 2 : "load missing files" from server
 
-	fmt.Printf("downloading %d missing files from %s\n", missingfiles, tgzsrc)
-
 	if missingfiles > 0 {
+
+		fmt.Printf("downloading %d missing files from %s\n", missingfiles, tgzsrc)
 
 		var w bytes.Buffer
 		gw, err := gzip.NewWriterLevel(&w, gzip.BestCompression)
@@ -364,7 +363,7 @@ func main() {
 				fmt.Printf("< %s \n", hdr.Name)
 			}
 
-			// included downloaded files into archive
+			// include downloaded files into archive
 			trout.WriteHeader(hdr)
 			if hdr.Size > 0 {
 				if _, err := io.Copy(trout, tr); err != nil {
