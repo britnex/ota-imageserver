@@ -28,17 +28,18 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 	"time"
 )
 
 var debug bool = false
 
-var tarfolder string = "/tmp/"
+var tgzsrc string = "./"
 
 func difftarhandler(w http.ResponseWriter, r *http.Request) {
 
-	inputfname := tarfolder + r.URL.Path[strings.LastIndex(r.URL.Path, "/")+1:]
+	inputfname := tgzsrc + path.Base(r.URL.Path)
 
 	if debug {
 		fmt.Println("serving diff file " + inputfname)
@@ -132,7 +133,7 @@ func difftarhandler(w http.ResponseWriter, r *http.Request) {
 
 func indextarhandler(w http.ResponseWriter, r *http.Request) {
 
-	inputfname := tarfolder + r.URL.Path[strings.LastIndex(r.URL.Path, "/")+1:]
+	inputfname := tgzsrc + path.Base(r.URL.Path)
 
 	if debug {
 		fmt.Println("serving index file " + inputfname)
@@ -197,7 +198,6 @@ func indextarhandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
-
 	}
 
 	tarout.Close()
@@ -206,7 +206,6 @@ func indextarhandler(w http.ResponseWriter, r *http.Request) {
 	if debug {
 		fmt.Printf("index sent.\n")
 	}
-
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -221,18 +220,30 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusMethodNotAllowed)
 	fmt.Fprintf(w, "405 - unsupported method")
-
 }
 
 func main() {
 
-	pbind := flag.String("bind", ":8090", "bin to this address and port")
+	defaultsrc := "./"
+	ptgzsrc := flag.String("src", defaultsrc, "publish all .tgz files from this directory")
+	pbind := flag.String("bind", ":8090", "bind to this address and port")
 	pdebug := flag.Bool("debug", false, "enable debug output")
 
 	flag.Parse()
 
+	if *ptgzsrc == defaultsrc {
+		fmt.Println("usage:")
+		flag.PrintDefaults()
+		os.Exit(1)
+	}
 	if *pdebug {
 		debug = true
+	}
+
+	tgzsrc = *ptgzsrc
+	if strings.HasSuffix(tgzsrc, "/") == false {
+		// ensure "/" suffix
+		tgzsrc = tgzsrc + "/"
 	}
 
 	http.HandleFunc("/", handler)
@@ -242,6 +253,8 @@ func main() {
 		ReadTimeout:  600 * time.Second,
 		WriteTimeout: 600 * time.Second,
 	}
+
+	fmt.Printf("listening on: %s\n", *pbind)
 
 	err := server.ListenAndServe()
 	if err != nil {
